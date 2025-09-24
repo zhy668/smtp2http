@@ -14,6 +14,14 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
+// min returns the smaller of two integers (for Go versions < 1.21)
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
+}
+
 func main() {
 	cfg := smtpsrv.ServerConfig{
 		ReadTimeout:     time.Duration(*flagReadTimeout) * time.Second,
@@ -85,14 +93,25 @@ func main() {
 				})
 			}
 
-			resp, err := resty.New().R().SetHeader("Content-Type", "application/json").SetBody(jsonData).Post(*flagWebhook)
+			// Create HTTP request with required headers
+			req := resty.New().R().SetHeader("Content-Type", "application/json").SetBody(jsonData)
+
+			// Add API key header if provided (for cloud-mail inbound authentication)
+			if *flagInboundKey != "" {
+				req.SetHeader("X-Inbound-Key", *flagInboundKey)
+				log.Printf("Sending email to webhook with API key: %s...", (*flagInboundKey)[:min(8, len(*flagInboundKey))])
+			}
+
+			resp, err := req.Post(*flagWebhook)
 			if err != nil {
-				log.Println(err)
+				log.Println("Webhook request failed:", err)
 				return errors.New("E1: Cannot accept your message due to internal error, please report that to our engineers")
 			} else if resp.StatusCode() != 200 {
-				log.Println(resp.Status())
+				log.Printf("Webhook returned non-200 status: %s, body: %s", resp.Status(), string(resp.Body()))
 				return errors.New("E2: Cannot accept your message due to internal error, please report that to our engineers")
 			}
+
+			log.Printf("Email successfully forwarded to webhook: %s", *flagWebhook)
 
 			return nil
 		}),

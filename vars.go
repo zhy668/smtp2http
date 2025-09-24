@@ -12,6 +12,7 @@ var (
 	flagAuthUSER       = flag.String("user", "", "user for smtp client")
 	flagAuthPASS       = flag.String("pass", "", "pass for smtp client")
 	flagDomain         = flag.String("domain", "", "domain for recieving mails")
+	flagInboundKey     = flag.String("inbound-key", "", "API key for cloud-mail inbound authentication (X-Inbound-Key header)")
 )
 
 func init() {

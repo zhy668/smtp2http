@@ -47,6 +47,26 @@ Native usage
 `smtp2http --listen=:25 --webhook=http://localhost:8080/api/smtp-hook`
 `smtp2http --help`
 
+Cloud-Mail Integration
+=====================
+This fork adds support for cloud-mail inbound API authentication:
+
+```bash
+# Basic usage with cloud-mail
+smtp2http --listen=:25 --webhook=https://your-domain.com/api/inbound --inbound-key=your-secret-api-key
+
+# With domain filtering
+smtp2http --listen=:25 --webhook=https://your-domain.com/api/inbound --inbound-key=your-secret-api-key --domain=example.com
+```
+
+**New Parameters:**
+- `--inbound-key`: API key for cloud-mail authentication (adds X-Inbound-Key header)
+
+**Features:**
+- Automatic X-Inbound-Key header injection for cloud-mail compatibility
+- Enhanced logging for webhook requests
+- Better error reporting with response body details
+
 Contribution
 ============
 Original repo from @alash3al
