@@ -11,6 +11,7 @@ type EmailAttachment struct {
 	Filename    string `json:"filename"`
 	ContentType string `json:"content_type"`
 	Data        string `json:"data"`
+	Content     []byte `json:"-"` // 用于安全检查，不序列化到JSON
 }
 
 // EmailEmbeddedFile ...

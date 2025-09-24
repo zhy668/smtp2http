@@ -47,25 +47,101 @@ Native usage
 `smtp2http --listen=:25 --webhook=http://localhost:8080/api/smtp-hook`
 `smtp2http --help`
 
-Cloud-Mail Integration
-=====================
-This fork adds support for cloud-mail inbound API authentication:
+Cloud-Mail Integration with Security Features
+============================================
+This fork adds comprehensive security features and cloud-mail inbound API authentication:
 
+## Basic Usage
 ```bash
-# Basic usage with cloud-mail
+# Simple usage with cloud-mail
 smtp2http --listen=:25 --webhook=https://your-domain.com/api/inbound --inbound-key=your-secret-api-key
-
-# With domain filtering
-smtp2http --listen=:25 --webhook=https://your-domain.com/api/inbound --inbound-key=your-secret-api-key --domain=example.com
 ```
 
-**New Parameters:**
-- `--inbound-key`: API key for cloud-mail authentication (adds X-Inbound-Key header)
+## Advanced Security Configuration
+```bash
+# Production-ready configuration with security features
+smtp2http \
+  --listen=:25 \
+  --webhook=https://your-domain.com/api/inbound \
+  --inbound-key=your-secret-api-key \
+  --allowed-domains=yourdomain.com,anotherdomain.com \
+  --strict-spf=true \
+  --rate-limit=10 \
+  --spam-keywords="viagra,lottery,urgent,winner,free money" \
+  --forbidden-types=exe,bat,cmd,com,pif,scr,vbs,js,jar,msi \
+  --max-attach-size=10485760 \
+  --blacklist-domains=spam-domain.com,malicious-site.org
+```
 
-**Features:**
-- Automatic X-Inbound-Key header injection for cloud-mail compatibility
-- Enhanced logging for webhook requests
-- Better error reporting with response body details
+## Security Parameters
+
+### Authentication & Access Control
+- `--inbound-key`: API key for cloud-mail authentication (adds X-Inbound-Key header)
+- `--allowed-domains`: Comma-separated list of allowed recipient domains (empty = allow all)
+- `--blacklist-domains`: Comma-separated list of blacklisted sender domains
+
+### SPF Verification
+- `--strict-spf`: Reject emails that fail SPF verification (default: false)
+
+### Rate Limiting
+- `--rate-limit`: Maximum emails per minute per sender IP (default: 60)
+
+### Spam Protection
+- `--spam-keywords`: Comma-separated list of spam keywords to block
+- `--forbidden-types`: Comma-separated list of forbidden attachment file extensions
+- `--max-attach-size`: Maximum attachment size in bytes (default: 10MB)
+
+## Security Features
+
+### Multi-Layer Protection
+1. **Rate Limiting**: Prevents email bombing attacks
+2. **Domain Validation**: Controls which domains can receive emails
+3. **SPF Verification**: Validates sender authorization
+4. **Content Filtering**: Blocks emails with spam keywords
+5. **Attachment Security**: Restricts dangerous file types and sizes
+6. **Sender Blacklisting**: Blocks emails from known malicious domains
+
+### Logging & Monitoring
+- Detailed security event logging
+- Email acceptance/rejection reasons
+- Spam score calculation
+- Client IP tracking
+- SPF verification results
+
+### Example Security Scenarios
+
+**High Security Mode** (Recommended for production):
+```bash
+smtp2http \
+  --listen=:25 \
+  --webhook=https://your-domain.com/api/inbound \
+  --inbound-key=your-secret-key \
+  --allowed-domains=yourdomain.com \
+  --strict-spf=true \
+  --rate-limit=5 \
+  --spam-keywords="viagra,lottery,urgent,winner" \
+  --max-attach-size=5242880
+```
+
+**Medium Security Mode** (Balanced):
+```bash
+smtp2http \
+  --listen=:25 \
+  --webhook=https://your-domain.com/api/inbound \
+  --inbound-key=your-secret-key \
+  --allowed-domains=yourdomain.com \
+  --rate-limit=10 \
+  --spam-keywords="viagra,lottery"
+```
+
+**Development Mode** (Minimal restrictions):
+```bash
+smtp2http \
+  --listen=:25 \
+  --webhook=https://your-domain.com/api/inbound \
+  --inbound-key=your-secret-key \
+  --rate-limit=100
+```
 
 Contribution
 ============

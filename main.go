@@ -35,7 +35,29 @@ func main() {
 				return errors.New("Cannot read your message: " + err.Error())
 			}
 
+			// 获取客户端信息
+			clientIP := GetClientIP(c.RemoteAddr().String())
+			senderEmail := c.From().Address
+			recipientEmail := c.To().Address
+
 			spfResult, _, _ := c.SPF()
+
+			// 执行安全检查（在解析附件之前进行基础检查）
+			allowed, reason, score := PerformSecurityChecks(
+				clientIP,
+				senderEmail,
+				recipientEmail,
+				msg.Subject,
+				string(msg.TextBody),
+				spfResult.String(),
+				nil, // 附件稍后检查
+			)
+
+			if !allowed {
+				log.Printf("Email rejected: %s (Score: %d, From: %s, To: %s, IP: %s)",
+					reason, score, senderEmail, recipientEmail, clientIP)
+				return errors.New("Email rejected: " + reason)
+			}
 
 			jsonData := EmailMessage{
 				ID:            msg.MessageID,
@@ -77,11 +99,20 @@ func main() {
 
 			for _, a := range msg.Attachments {
 				data, _ := ioutil.ReadAll(a.Data)
-				jsonData.Attachments = append(jsonData.Attachments, &EmailAttachment{
+				attachment := &EmailAttachment{
 					Filename:    a.Filename,
 					ContentType: a.ContentType,
 					Data:        base64.StdEncoding.EncodeToString(data),
-				})
+					Content:     data, // 用于安全检查
+				}
+				jsonData.Attachments = append(jsonData.Attachments, attachment)
+			}
+
+			// 执行附件安全检查
+			if attachCheck := CheckAttachments(jsonData.Attachments); !attachCheck.Allowed {
+				log.Printf("Email rejected due to attachment: %s (From: %s, To: %s)",
+					attachCheck.Reason, senderEmail, recipientEmail)
+				return errors.New("Email rejected: " + attachCheck.Reason)
 			}
 
 			for _, a := range msg.EmbeddedFiles {
@@ -101,6 +132,10 @@ func main() {
 				req.SetHeader("X-Inbound-Key", *flagInboundKey)
 				log.Printf("Sending email to webhook with API key: %s...", (*flagInboundKey)[:min(8, len(*flagInboundKey))])
 			}
+
+			// 记录安全检查通过的邮件
+			log.Printf("Email accepted: From=%s, To=%s, Subject=%s, IP=%s, SPF=%s, Score=%d",
+				senderEmail, recipientEmail, msg.Subject, clientIP, spfResult.String(), score)
 
 			resp, err := req.Post(*flagWebhook)
 			if err != nil {
