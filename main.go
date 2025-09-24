@@ -74,7 +74,12 @@ func main() {
 			jsonData.Body.HTML = string(msg.HTMLBody)
 			jsonData.Body.Text = string(msg.TextBody)
 
-			jsonData.Addresses.From = transformStdAddressToEmailAddress([]*mail.Address{c.From()})[0]
+			// 优先使用邮件头中的 From 字段，如果不存在则使用 SMTP 信封地址
+			if len(msg.From) > 0 {
+				jsonData.Addresses.From = transformStdAddressToEmailAddress(msg.From)[0]
+			} else {
+				jsonData.Addresses.From = transformStdAddressToEmailAddress([]*mail.Address{c.From()})[0]
+			}
 			jsonData.Addresses.To = transformStdAddressToEmailAddress([]*mail.Address{c.To()})[0]
 
 			toSplited := strings.Split(jsonData.Addresses.To.Address, "@")
