@@ -37,7 +37,14 @@ func main() {
 
 			// 获取客户端信息
 			clientIP := GetClientIP(c.RemoteAddr().String())
-			senderEmail := c.From().Address
+
+			// 优先使用邮件头中的 From 字段作为发件人地址
+			var senderEmail string
+			if len(msg.From) > 0 {
+				senderEmail = msg.From[0].Address
+			} else {
+				senderEmail = c.From().Address
+			}
 			recipientEmail := c.To().Address
 
 			spfResult, _, _ := c.SPF()
