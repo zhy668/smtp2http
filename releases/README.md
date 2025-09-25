@@ -132,7 +132,7 @@ _smtp2http.example.com TXT "allow=1;hook=https://mail.example.com/api/inbound;se
 2. **防火墙**: 确保SMTP端口（通常是25）在防火墙中开放
 3. **DNS配置**: 确保MX记录指向运行smtp2http的服务器
 4. **SSL/TLS**: 如果需要加密传输，请在前端使用nginx等反向代理
-5. **🆕 DNS TXT记录**: 启用DNS验证时，确保为每个接收域名配置正确的TXT记录
+5. **🆕 DNS TXT记录**: 启用DNS验证时，确保为每个接收域名配置正确的TXT记录，格式为 `_smtp2http.yourdomain.com TXT "allow=1;hook=https://inbox.example.com/api/inbound;secret=your-secret-password"`
 
 ## 更新日志
 
