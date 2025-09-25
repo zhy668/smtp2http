@@ -22,8 +22,11 @@ var (
 	flagForbiddenTypes   = flag.String("forbidden-types", "exe,bat,cmd,com,pif,scr,vbs,js,jar,msi", "comma-separated list of forbidden attachment file extensions")
 	flagMaxAttachSize    = flag.Int64("max-attach-size", 10*1024*1024, "maximum attachment size in bytes (default 10MB)")
 	flagBlacklistDomains = flag.String("blacklist-domains", "", "comma-separated list of blacklisted sender domains")
+
+	// DNS TXT record domain validation
+	flagRcptDomainSecret = flag.String("rcpt-domain-secret", "", "secret for DNS TXT record domain validation (enables DNS-based domain verification)")
 )
 
 func init() {
-	flag.Parse()
+	// flag.Parse() will be called in main()
 }
